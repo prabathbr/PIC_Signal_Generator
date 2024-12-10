@@ -1,0 +1,164 @@
+MPLINK 4.49, Linker
+Linker Map File - Created Tue Dec 10 11:18:32 2024
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000000
+                   .org_1       code   0x000000    program   0x000478
+                   .org_2       code   0x000400    program   0x000022
+                   .org_3       code   0x000414    program   0x000022
+                   .org_4       code   0x000430    program   0x000030
+                   .org_5       code   0x00044e    program   0x000030
+                   .org_6       code   0x00046c    program   0x000030
+                   .org_7       code   0x00048a    program   0x000030
+                   .org_8       code   0x0004a8    program   0x000030
+                   .org_9       code   0x0004c6    program   0x000030
+                  .org_10       code   0x0004e2    program   0x000030
+                  .org_13       code   0x000500    program   0x00002a
+                  .org_12       code   0x000600    program   0x0001fa
+                  .org_11       code   0x000700    program   0x0001fa
+   .config_2007_SIG_GEN.O       code   0x002007    program   0x000002
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x00023b      
+                            0x000400    0x000410      
+                            0x000414    0x000424      
+                            0x000430    0x000447      
+                            0x00044e    0x000465      
+                            0x00046c    0x000483      
+                            0x00048a    0x0004a1      
+                            0x0004a8    0x0004bf      
+                            0x0004c6    0x0004dd      
+                            0x0004e2    0x0004f9      
+                            0x000500    0x000514      
+                            0x000600    0x0006fc      
+                            0x000700    0x0007fc      
+                            0x002007    0x002007      
+            1302 out of 2182 program addresses used, program memory utilization is 59%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+              change_mode   0x00009f    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    chkm1   0x00008e    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    chkm2   0x000090    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                      dec   0x000136    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                     dec1   0x0001b0    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    delay   0x000227    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   delay2   0x0001c2    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  delay2x   0x0001c7    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   delay3   0x0001d9    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                delay_1ms   0x00022c    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+              delay_1ms_0   0x000230    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  delay_w   0x000228    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  delaysq   0x0001d0    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                delaysq_0   0x0001d4    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 disp_sqr   0x00016c    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 done_sqr   0x0001a8    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                      inc   0x000105    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                     inc1   0x000167    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 lcd_addr   0x0001fc    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                lcd_clock   0x00021e    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 lcd_data   0x000202    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 lcd_init   0x0001e0    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                     loop   0x000083    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    loop0   0x0001c4    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   loop0x   0x0001cb    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  loop11x   0x0001cb    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    loop3   0x0001db    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   no_sqr   0x00018a    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                     poll   0x00008a    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    set_0   0x0000c8    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    set_1   0x0000a6    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    set_2   0x0000b7    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   set_ok   0x0000d9    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                short_dly   0x000237    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+              short_dly_0   0x000239    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                sin_delay   0x00048a    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 sin_high   0x0004a8    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  sin_low   0x0004e2    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  sin_mid   0x0004c6    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                     sine   0x000700    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 sine_run   0x0000e1    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                     sq_s   0x0001d2    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                sqr_delay   0x000430    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 sqr_high   0x00044e    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  sqr_low   0x00046c    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   square   0x000500    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+               square_run   0x0000f9    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  trangle   0x000600    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+              trangle_run   0x0000ed    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   volt_h   0x000400    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   volt_l   0x000414    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 volt_max   0x00010e    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 volt_min   0x00013f    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+             write_eeprom   0x0001b7    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                     loop   0x000083    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                     poll   0x00008a    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    chkm1   0x00008e    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    chkm2   0x000090    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+              change_mode   0x00009f    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    set_1   0x0000a6    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    set_2   0x0000b7    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    set_0   0x0000c8    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   set_ok   0x0000d9    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 sine_run   0x0000e1    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+              trangle_run   0x0000ed    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+               square_run   0x0000f9    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                      inc   0x000105    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 volt_max   0x00010e    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                      dec   0x000136    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 volt_min   0x00013f    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                     inc1   0x000167    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 disp_sqr   0x00016c    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   no_sqr   0x00018a    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 done_sqr   0x0001a8    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                     dec1   0x0001b0    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+             write_eeprom   0x0001b7    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   delay2   0x0001c2    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    loop0   0x0001c4    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  delay2x   0x0001c7    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   loop0x   0x0001cb    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  loop11x   0x0001cb    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  delaysq   0x0001d0    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                     sq_s   0x0001d2    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                delaysq_0   0x0001d4    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   delay3   0x0001d9    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    loop3   0x0001db    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 lcd_init   0x0001e0    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 lcd_addr   0x0001fc    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 lcd_data   0x000202    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                lcd_clock   0x00021e    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                    delay   0x000227    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  delay_w   0x000228    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                delay_1ms   0x00022c    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+              delay_1ms_0   0x000230    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                short_dly   0x000237    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+              short_dly_0   0x000239    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   volt_h   0x000400    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   volt_l   0x000414    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                sqr_delay   0x000430    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 sqr_high   0x00044e    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  sqr_low   0x00046c    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                sin_delay   0x00048a    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                 sin_high   0x0004a8    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  sin_mid   0x0004c6    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  sin_low   0x0004e2    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                   square   0x000500    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                  trangle   0x000600    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+                     sine   0x000700    program     static J:\kicad_learn\Code\Sig_Gen\MPLAB Project\Sig_gen.asm
+
+

@@ -1,0 +1,2461 @@
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00002 ;EE322 Project
+                      00003 ;Group No:26
+                      00004 ;....................................................................
+                      00005 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00006 ;Initial EEPROM data : 01 01 E1 01 01 01
+                      00007 ;*************************************************************
+                      00008 
+Warning[205]: Found directive in column 1. (__config)
+2007   3F0A           00009 __config _HS_OSC & _LVP_OFF & _WDT_OFF & _PWRTE_OFF & _BODEN_OFF & _MCLRE_OFF
+                      00010 ;configuration bits for programming
+                      00011 
+                      00012 ;let's include PIC16F628A headers
+                      00013 #include "p16f628a.inc"
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ;  MPASM PIC16F628A processor include
+                      00005 ; 
+                      00006 ;  (c) Copyright 1999-2013 Microchip Technology, All rights reserved
+                      00007 ;==========================================================================
+                      00008 
+                      00385         LIST
+                      00014 
+                      00015 ;program begins at 0x00
+Warning[205]: Found directive in column 1. (org)
+0000                  00016 org 0x00
+                      00017 
+                      00018 ;*************************************************************
+                      00019 ;Initilization
+                      00020 ;*************************************************************
+                      00021 
+                      00022 ;variables define
+  00000020            00023 count1 equ 0x20
+  00000021            00024 count2 equ 0x21
+  00000022            00025 count3 equ 0x22 ;delays
+  00000023            00026 value   equ 0x23        ;sin/trg lookup table row
+  00000024            00027 mode equ 0x24 ;mode set
+  00000025            00028 count4 equ 0x25
+  00000026            00029 count5 equ 0x26
+  00000027            00030 count_pos equ 0x27
+  00000028            00031 count6 equ 0x28
+  00000029            00032 count7 equ 0x29
+  00000030            00033 delay_0 equ 0x30                                              
+  00000031            00034 delay_1 equ 0x31
+  00000032            00035 delay_2 equ 0x32 ;delays                                              
+  00000033            00036 lcd_temp        equ 0x33        ;lcd buffer
+  000000A0            00037 volt    equ 0xA0        ;voltage value
+  00000034            00038 volt1   equ 0x34        ;voltage value buffer
+  00000035            00039 count_sq        equ 0x35        ;square delay
+  00000036            00040 count_si        equ 0x36        ;sine/trg delay
+                      00041 ;end of variable set
+                      00042 
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00043 ;disable comparators and make PORTA as digital input
+Warning[203]: Found opcode in column 1. (movlw)
+0000   3007           00044 movlw 0x07
+Warning[203]: Found opcode in column 1. (movwf)
+0001   009F           00045 movwf CMCON
+                      00046 
+                      00047 
+                      00048 ;LCD control lines define
+                      00049 #define lcd_4   PORTB, 0
+                      00050 #define lcd_5   PORTB, 1        
+                      00051 #define lcd_6   PORTB, 2
+                      00052 #define lcd_7   PORTB, 3        ;data lines for 4bit mode
+                      00053 #define lcd_rs  PORTB, 4        ;command line
+                      00054 #define lcd_e   PORTA, 0        ;clock line
+                      00055 ;END LCD control lines
+                      00056 
+                      00057 ;set I/O pins
+Warning[203]: Found opcode in column 1. (bsf)
+0002   1683           00058 bsf STATUS,RP0  ;bank1
+                      00059 
+Warning[203]: Found opcode in column 1. (bcf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0003   1005           00060 bcf TRISA,RA0   ;lcd clock line as output
+Warning[203]: Found opcode in column 1. (bsf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0004   1485           00061 bsf TRISA,RA1
+Warning[203]: Found opcode in column 1. (bsf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0005   1585           00062 bsf TRISA,RA3
+Warning[203]: Found opcode in column 1. (bsf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0006   1605           00063 bsf TRISA,RA4
+Warning[203]: Found opcode in column 1. (bsf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0007   1685           00064 bsf TRISA,RA5   ;RA1,3,4,5 as input
+                      00065 
+Warning[203]: Found opcode in column 1. (clrf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0008   0186           00066 clrf TRISB      ;PORTB as ouput
+Warning[203]: Found opcode in column 1. (movlw)
+Warning[209]: Missing quote
+0009   30E0           00067 movlw b'11100000
+Warning[203]: Found opcode in column 1. (movwf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+000A   009F           00068 movwf VRCON     ;enalbe internal voltage reference module
+Warning[203]: Found opcode in column 1. (bcf)
+000B   1283           00069 bcf STATUS,RP0  ;bank0
+                      00070 
+Warning[203]: Found opcode in column 1. (clrf)
+000C   01A3           00071 clrf value      ;clear lookup table row to 0
+Warning[203]: Found opcode in column 1. (movlw)
+000D   3005           00072 movlw 0x05
+Warning[203]: Found opcode in column 1. (movwf)
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000E   00A2           00073 movwf count3    ;init some delay
+                      00074 
+                      00075 
+Warning[203]: Found opcode in column 1. (call)
+000F   21E0           00076 call    lcd_init        ;init lcd
+                      00077 
+                      00078 ;Loading previous state from EEPROM
+                      00079 
+Warning[203]: Found opcode in column 1. (bsf)
+0010   1683           00080 bsf STATUS,RP0 ;bank1
+Warning[203]: Found opcode in column 1. (movlw)
+0011   3005           00081 movlw 0x05
+Warning[203]: Found opcode in column 1. (movwf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0012   009B           00082 movwf EEADR     ;set EEPROM address
+Warning[203]: Found opcode in column 1. (bsf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0013   141C           00083 bsf EECON1,RD   ;read EEPROM
+Warning[204]: Found pseudo-op in column 1. (movfw)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0014   081A           00084 movfw EEDATA    
+Warning[203]: Found opcode in column 1. (bcf)
+0015   1283           00085 bcf STATUS,RP0 ;bank0
+Warning[203]: Found opcode in column 1. (movwf)
+0016   00C1           00086 movwf 0x41 ;copy read data to buffer
+Warning[204]: Found pseudo-op in column 1. (movfw)
+0017   0841           00087 movfw 0x41
+Warning[203]: Found opcode in column 1. (movwf)
+0018   00A7           00088 movwf count_pos ;copy data to count position 
+                      00089 ;mode
+                      00090 ;load mode
+Warning[203]: Found opcode in column 1. (bsf)
+0019   1683           00091 bsf STATUS,RP0 ;bank0
+Warning[203]: Found opcode in column 1. (movlw)
+001A   3000           00092 movlw 0x00
+Warning[203]: Found opcode in column 1. (movwf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+001B   009B           00093 movwf EEADR     ;set address
+Warning[203]: Found opcode in column 1. (bsf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+001C   141C           00094 bsf EECON1,RD   ;read
+Warning[204]: Found pseudo-op in column 1. (movfw)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+001D   081A           00095 movfw EEDATA
+Warning[203]: Found opcode in column 1. (bcf)
+001E   1283           00096 bcf STATUS,RP0  ;bank0
+Warning[203]: Found opcode in column 1. (movwf)
+001F   00A4           00097 movwf mode      ;copy read data to mode reg
+Warning[203]: Found opcode in column 1. (btfsc)
+0020   1824           00098 btfsc  mode,0  ;if mode is sqr
+Warning[203]: Found opcode in column 1. (call)
+0021   20C8           00099 call set_0      ;run sqr
+Warning[203]: Found opcode in column 1. (btfsc)
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0022   18A4           00100 btfsc  mode,1 ;if mode is trg
+Warning[203]: Found opcode in column 1. (call)
+0023   20A6           00101 call set_1      ;run trg
+Warning[203]: Found opcode in column 1. (btfsc)
+0024   1924           00102 btfsc  mode,2 ;if mode is sine
+Warning[203]: Found opcode in column 1. (call)
+0025   20B7           00103 call set_2      ;run sine
+                      00104 ;/mode
+                      00105 
+Warning[204]: Found pseudo-op in column 1. (movfw)
+0026   0841           00106 movfw 0x41
+Warning[203]: Found opcode in column 1. (movwf)
+0027   00A7           00107 movwf count_pos ;load count position from buffer
+                      00108 
+                      00109 ;volt
+                      00110 ;load amplitude
+Warning[203]: Found opcode in column 1. (bsf)
+0028   1683           00111 bsf STATUS,RP0  ;bank1
+Warning[203]: Found opcode in column 1. (movlw)
+0029   3002           00112 movlw 0x02      
+Warning[203]: Found opcode in column 1. (movwf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+002A   009B           00113 movwf EEADR     ;set address
+Warning[203]: Found opcode in column 1. (bsf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+002B   141C           00114 bsf EECON1,RD   ;read
+Warning[204]: Found pseudo-op in column 1. (movfw)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+002C   081A           00115 movfw EEDATA    
+Warning[203]: Found opcode in column 1. (movwf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+002D   009F           00116 movwf VRCON     ;copy read data to VRCON
+Warning[203]: Found opcode in column 1. (bcf)
+002E   1283           00117 bcf STATUS,RP0  ;bank0
+                      00118 
+Warning[203]: Found opcode in column 1. (bsf)
+002F   1683           00119 bsf STATUS,RP0  ;bank1
+Warning[203]: Found opcode in column 1. (movlw)
+0030   3003           00120 movlw 0x03
+Warning[203]: Found opcode in column 1. (movwf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0031   009B           00121 movwf EEADR     ;set address
+Warning[203]: Found opcode in column 1. (bsf)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0032   141C           00122 bsf EECON1,RD   ;read
+Warning[204]: Found pseudo-op in column 1. (movfw)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0033   081A           00123 movfw EEDATA
+Warning[203]: Found opcode in column 1. (bcf)
+0034   1283           00124 bcf STATUS,RP0  ;bank0
+Warning[203]: Found opcode in column 1. (movwf)
+0035   00B4           00125 movwf volt1     ;copy read data to voltage level reg
+                      00126 
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00127 ;Dummy LCD routine to show it works
+                      00128 ;movlw  POSITION  = set the position on LCD                                
+                      00129 ;call   lcd_addr  = send it to LCD                      
+                      00130 ;movlw  'CHAR'    = set the char to show        
+                      00131 ;call   lcd_data  = send it to LCD
+                      00132 ;this for lines are run for each LCD display and not repeated in comments       
+                      00133 
+                      00134 
+                      00135 ;Show Amplitude in LCD
+                      00136 ;High digit
+Warning[203]: Found opcode in column 1. (movlw)
+0036   3008           00137 movlw   0x08 ;LCD address                                 
+Warning[203]: Found opcode in column 1. (call)
+0037   21FC           00138 call    lcd_addr ;set it on LCD
+Warning[203]: Found opcode in column 1. (movlw)
+0038   3004           00139 movlw high volt_h ; get location of volt_h table
+Warning[203]: Found opcode in column 1. (movwf)
+0039   008A           00140 movwf PCLATH ; set PCLATH as needed
+Warning[204]: Found pseudo-op in column 1. (movfw)
+003A   0834           00141 movfw volt1     ; set row value 
+Warning[203]: Found opcode in column 1. (call)
+003B   2400           00142 call volt_h     ; get data on that row
+Warning[203]: Found opcode in column 1. (call)
+003C   2202           00143 call    lcd_data ; send that data to LCD to show
+                      00144 
+                      00145 ;;Similar procedure is used whenever we needed to get data from table and show on LCD   
+                      00146 
+                      00147 ;low digit
+Warning[203]: Found opcode in column 1. (movlw)
+003D   300A           00148 movlw   0x0A                                  
+Warning[203]: Found opcode in column 1. (call)
+003E   21FC           00149 call    lcd_addr
+Warning[203]: Found opcode in column 1. (movlw)
+003F   3004           00150 movlw high volt_l
+Warning[203]: Found opcode in column 1. (movwf)
+0040   008A           00151 movwf PCLATH
+Warning[204]: Found pseudo-op in column 1. (movfw)
+0041   0834           00152 movfw volt1
+Warning[203]: Found opcode in column 1. (call)
+0042   2414           00153 call volt_l
+Warning[203]: Found opcode in column 1. (call)
+0043   2202           00154 call    lcd_data        
+                      00155 ;/volt
+                      00156 
+                      00157 
+                      00158 
+                      00159 ;freq
+Warning[204]: Found pseudo-op in column 1. (movfw)
+0044   0841           00160 movfw 0x41
+Warning[203]: Found opcode in column 1. (movwf)
+0045   00A7           00161 movwf count_pos ;load count position from buffer
+Warning[203]: Found opcode in column 1. (call)
+0046   216C           00162 call disp_sqr ;display frequency
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00163 ;/freq
+                      00164 
+                      00165 
+                      00166 ;Show default charcters on LCD
+                      00167 
+                      00168 
+Warning[203]: Found opcode in column 1. (movlw)
+0047   3000           00169 movlw   0x00                                  
+Warning[203]: Found opcode in column 1. (call)
+0048   21FC           00170 call    lcd_addr                
+Warning[203]: Found opcode in column 1. (movlw)
+0049   304D           00171 movlw   'M'
+Warning[203]: Found opcode in column 1. (call)
+004A   2202           00172 call    lcd_data        
+                      00173 
+                      00174 ;Show "M:"
+Warning[203]: Found opcode in column 1. (movlw)
+004B   3001           00175 movlw   0x01                                  
+Warning[203]: Found opcode in column 1. (call)
+004C   21FC           00176 call    lcd_addr                
+Warning[203]: Found opcode in column 1. (movlw)
+004D   303A           00177 movlw   ':'
+Warning[203]: Found opcode in column 1. (call)
+004E   2202           00178 call    lcd_data
+                      00179 
+                      00180 ;Show "F:"
+Warning[203]: Found opcode in column 1. (movlw)
+004F   3040           00181 movlw   0x40                                  
+Warning[203]: Found opcode in column 1. (call)
+0050   21FC           00182 call    lcd_addr                
+Warning[203]: Found opcode in column 1. (movlw)
+0051   3046           00183 movlw   'F'
+Warning[203]: Found opcode in column 1. (call)
+0052   2202           00184 call    lcd_data        
+Warning[203]: Found opcode in column 1. (movlw)
+0053   3041           00185 movlw   0x41                                  
+Warning[203]: Found opcode in column 1. (call)
+0054   21FC           00186 call    lcd_addr                
+Warning[203]: Found opcode in column 1. (movlw)
+0055   303A           00187 movlw   ':'
+Warning[203]: Found opcode in column 1. (call)
+0056   2202           00188 call    lcd_data
+                      00189 
+                      00190 ;Show "Hz"
+Warning[203]: Found opcode in column 1. (movlw)
+0057   3048           00191 movlw   0x48                                  
+Warning[203]: Found opcode in column 1. (call)
+0058   21FC           00192 call    lcd_addr                
+Warning[203]: Found opcode in column 1. (movlw)
+0059   3048           00193 movlw   'H'
+Warning[203]: Found opcode in column 1. (call)
+005A   2202           00194 call    lcd_data
+Warning[203]: Found opcode in column 1. (movlw)
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+005B   3049           00195 movlw   0x49                                  
+Warning[203]: Found opcode in column 1. (call)
+005C   21FC           00196 call    lcd_addr                
+Warning[203]: Found opcode in column 1. (movlw)
+005D   307A           00197 movlw   'z'
+Warning[203]: Found opcode in column 1. (call)
+005E   2202           00198 call    lcd_data
+                      00199 
+                      00200 ;Show "A:"
+Warning[203]: Found opcode in column 1. (movlw)
+005F   3006           00201 movlw   0x06                                  
+Warning[203]: Found opcode in column 1. (call)
+0060   21FC           00202 call    lcd_addr                
+Warning[203]: Found opcode in column 1. (movlw)
+0061   3041           00203 movlw   'A'
+Warning[203]: Found opcode in column 1. (call)
+0062   2202           00204 call    lcd_data        
+Warning[203]: Found opcode in column 1. (movlw)
+0063   3007           00205 movlw   0x07                                  
+Warning[203]: Found opcode in column 1. (call)
+0064   21FC           00206 call    lcd_addr                
+Warning[203]: Found opcode in column 1. (movlw)
+0065   303A           00207 movlw   ':'
+Warning[203]: Found opcode in column 1. (call)
+0066   2202           00208 call    lcd_data
+                      00209 
+                      00210 ;Show "."
+Warning[203]: Found opcode in column 1. (movlw)
+0067   3009           00211 movlw   0x09                                  
+Warning[203]: Found opcode in column 1. (call)
+0068   21FC           00212 call    lcd_addr
+Warning[203]: Found opcode in column 1. (movlw)
+0069   302E           00213 movlw '.'
+Warning[203]: Found opcode in column 1. (call)
+006A   2202           00214 call    lcd_data        
+                      00215 
+                      00216 ;Show "Vpp"
+Warning[203]: Found opcode in column 1. (movlw)
+006B   300B           00217 movlw   0x0B                                  
+Warning[203]: Found opcode in column 1. (call)
+006C   21FC           00218 call    lcd_addr
+Warning[203]: Found opcode in column 1. (movlw)
+006D   3056           00219 movlw 'V'
+Warning[203]: Found opcode in column 1. (call)
+006E   2202           00220 call    lcd_data        
+Warning[203]: Found opcode in column 1. (movlw)
+006F   300C           00221 movlw   0x0C                                  
+Warning[203]: Found opcode in column 1. (call)
+0070   21FC           00222 call    lcd_addr
+Warning[203]: Found opcode in column 1. (movlw)
+0071   3070           00223 movlw 'p'
+Warning[203]: Found opcode in column 1. (call)
+0072   2202           00224 call    lcd_data        
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+Warning[203]: Found opcode in column 1. (movlw)
+0073   300D           00225 movlw   0x0D                                  
+Warning[203]: Found opcode in column 1. (call)
+0074   21FC           00226 call    lcd_addr
+Warning[203]: Found opcode in column 1. (movlw)
+0075   3070           00227 movlw 'p'
+Warning[203]: Found opcode in column 1. (call)
+0076   2202           00228 call    lcd_data        
+                      00229 
+                      00230 
+                      00231 ;Show "G26" (Group number)
+Warning[203]: Found opcode in column 1. (movlw)
+0077   304D           00232 movlw   0x4D                                  
+Warning[203]: Found opcode in column 1. (call)
+0078   21FC           00233 call    lcd_addr
+Warning[203]: Found opcode in column 1. (movlw)
+0079   3047           00234 movlw 'G'
+Warning[203]: Found opcode in column 1. (call)
+007A   2202           00235 call    lcd_data
+Warning[203]: Found opcode in column 1. (movlw)
+007B   304E           00236 movlw   0x4E                                  
+Warning[203]: Found opcode in column 1. (call)
+007C   21FC           00237 call    lcd_addr
+Warning[203]: Found opcode in column 1. (movlw)
+007D   3032           00238 movlw '2'
+Warning[203]: Found opcode in column 1. (call)
+007E   2202           00239 call    lcd_data
+Warning[203]: Found opcode in column 1. (movlw)
+007F   304F           00240 movlw   0x4F                                  
+Warning[203]: Found opcode in column 1. (call)
+0080   21FC           00241 call    lcd_addr
+Warning[203]: Found opcode in column 1. (movlw)
+0081   3036           00242 movlw '6'
+Warning[203]: Found opcode in column 1. (call)
+0082   2202           00243 call    lcd_data
+                      00244 
+                      00245 
+                      00246 
+                      00247 ;*************************************************************
+                      00248 ; Main Loop
+                      00249 ;*************************************************************
+0083                  00250 loop
+                      00251 
+0083   1824           00252         btfsc  mode,0  ;if mode is sqr
+0084   20F9           00253         call square_run ;run sqr
+                      00254 
+0085   18A4           00255         btfsc  mode,1  ;if mode is trg
+0086   20ED           00256         call trangle_run        ;run trg
+                      00257 
+0087   1924           00258         btfsc  mode,2  ;if mode is sine
+0088   20E1           00259         call sine_run   ;run sine
+                      00260 
+Warning[203]: Found opcode in column 1. (goto)
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0089   2883           00261 goto loop
+                      00262 
+                      00263 
+                      00264 ;*************************************************************
+                      00265 ; Button polling Function
+                      00266 ;*************************************************************
+008A                  00267 poll
+008A   01A3           00268         clrf value ;clead lookuptable row to 0
+                      00269 
+008B   1C85           00270         btfss PORTA,RA1 ;if RA0 button on
+008C   288E           00271         goto chkm1      ;goto chkm1
+008D   2890           00272         goto chkm2      ;else goto chkm2
+                      00273 
+Warning[207]: Found label after column 1. (chkm1)
+008E                  00274         chkm1
+008E   1D85           00275                 btfss PORTA,RA3 ;if bot RA3 & RA1 buttons on
+008F   209F           00276                 call change_mode        ;change mode
+                      00277 
+Warning[207]: Found label after column 1. (chkm2)
+0090                  00278         chkm2   ;if only RA0 is on continue
+0090   1C85           00279                 btfss PORTA,RA1 ;if RA1 button on 
+0091   2105           00280                 call inc ;increase amplitude
+                      00281 
+0092   1D85           00282                 btfss PORTA,RA3 ;if RA3 button on
+0093   2136           00283                 call dec        ;derease amplitude
+                      00284 
+0094   1E85           00285                 btfss PORTA,RA5 ;if RA5 button on
+0095   21B0           00286                 call dec1       ;decrease delay(increase freq)
+                      00287 
+0096   1E05           00288                 btfss PORTA,RA4 ;if RA$ button on
+0097   2167           00289                 call inc1       ;increase delay(decrease freq)
+                      00290 
+0098   1824           00291                 btfsc  mode,0  ;if mode sqr
+0099   28F9           00292                 goto square_run ;run sqr again
+                      00293 
+009A   18A4           00294                 btfsc  mode,1  ;if mode trg
+009B   28ED           00295                 goto trangle_run        ;run trg again
+                      00296 
+009C   1924           00297                 btfsc  mode,2  ;if mode sine
+009D   28E1           00298                 goto sine_run   ;run sine again
+                      00299 
+                      00300 
+Warning[203]: Found opcode in column 1. (return)
+009E   0008           00301 return
+                      00302 
+                      00303 ;*************************************************************
+                      00304 ; Change mode Function
+                      00305 ;*************************************************************
+                      00306 
+009F                  00307 change_mode
+                      00308 
+009F   21D9           00309         call delay3 ;delay some time
+00A0   1824           00310         btfsc  mode,0  ;if current square 
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00A1   28A6           00311         goto set_1      ;set trangle
+                      00312 
+                      00313  
+00A2   18A4           00314         btfsc  mode,1 ;if current trangle
+00A3   28B7           00315         goto set_2      ;set sine
+                      00316 
+00A4   1924           00317         btfsc  mode,2 ;if current sine
+00A5   28C8           00318         goto set_0      ;set square
+                      00319 
+Warning[207]: Found label after column 1. (set_1)
+00A6                  00320         set_1   ;set trangle on mode reg
+00A6   1024           00321                 bcf mode,0
+00A7   1124           00322                 bcf mode,2
+00A8   14A4           00323                 bsf mode,1
+                      00324 
+                      00325 ;display TRG on LCD
+00A9   3002           00326                 movlw   0x02                                  
+00AA   21FC           00327                 call    lcd_addr                
+00AB   3054           00328                 movlw   'T'
+00AC   2202           00329                 call    lcd_data        
+00AD   3003           00330                 movlw   0x03                                  
+00AE   21FC           00331                 call    lcd_addr                
+00AF   3052           00332                 movlw   'R'
+00B0   2202           00333                 call    lcd_data        
+00B1   3004           00334                 movlw   0x04                                  
+00B2   21FC           00335                 call    lcd_addr                
+00B3   3047           00336                 movlw   'G'
+00B4   2202           00337                 call    lcd_data        
+00B5   218A           00338                 call no_sqr     ;load appropriate freq and show/generate
+00B6   28D9           00339                 goto set_ok ;set ok
+                      00340 
+                      00341 
+Warning[207]: Found label after column 1. (set_2)
+00B7                  00342         set_2 ;set sine on mode reg
+00B7   1024           00343                 bcf mode,0
+00B8   10A4           00344                 bcf mode,1
+00B9   1524           00345                 bsf mode,2
+                      00346 
+                      00347                 ;display SIN on LCD
+00BA   3002           00348                 movlw   0x02                                  
+00BB   21FC           00349                 call    lcd_addr                
+00BC   3053           00350                 movlw   'S'
+00BD   2202           00351                 call    lcd_data        
+00BE   3003           00352                 movlw   0x03                                  
+00BF   21FC           00353                 call    lcd_addr                
+00C0   3049           00354                 movlw   'I'
+00C1   2202           00355                 call    lcd_data        
+00C2   3004           00356                 movlw   0x04                                  
+00C3   21FC           00357                 call    lcd_addr                
+00C4   304E           00358                 movlw   'N'
+00C5   2202           00359                 call    lcd_data        
+00C6   218A           00360                 call no_sqr ;load appropriate freq and show/generate
+00C7   28D9           00361                 goto set_ok     ;set ok
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00362 
+Warning[207]: Found label after column 1. (set_0)
+00C8                  00363         set_0   ;set square on mode reg
+00C8   10A4           00364                 bcf mode,1
+00C9   1124           00365                 bcf mode,2
+00CA   1424           00366                 bsf mode,0
+                      00367                 ;display SIN on LCD
+00CB   3002           00368                 movlw   0x02                                  
+00CC   21FC           00369                 call    lcd_addr                
+00CD   3053           00370                 movlw   'S'
+00CE   2202           00371                 call    lcd_data        
+00CF   3003           00372                 movlw   0x03                                  
+00D0   21FC           00373                 call    lcd_addr                
+00D1   3051           00374                 movlw   'Q'
+00D2   2202           00375                 call    lcd_data        
+00D3   3004           00376                 movlw   0x04                                  
+00D4   21FC           00377                 call    lcd_addr                
+00D5   3052           00378                 movlw   'R'
+00D6   2202           00379                 call    lcd_data        
+00D7   216C           00380                 call disp_sqr ;load appropriate freq and show/generate
+00D8   28D9           00381                 goto set_ok ;set ok
+                      00382 
+                      00383 
+                      00384 
+Warning[207]: Found label after column 1. (set_ok)
+00D9                  00385         set_ok
+                      00386                 ;writing mode to EEPROM
+00D9   0824           00387                 movfw mode      ;copy mode to W
+00DA   1683           00388                 bsf STATUS, RP0 ;bank1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00DB   009A           00389                 movwf EEDATA ;copy W to EEDATA
+00DC   3000           00390                 movlw 0x00
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00DD   009B           00391                 movwf EEADR ;set address
+00DE   1283           00392                 bcf STATUS, RP0 ;bank0 
+00DF   21B7           00393                 call write_eeprom       ;write EEPROM
+                      00394 
+Warning[203]: Found opcode in column 1. (return)
+00E0   0008           00395 return
+                      00396 
+                      00397 ;*************************************************************
+                      00398 ; Generate Sine wave Function
+                      00399 ;*************************************************************
+                      00400 
+00E1                  00401 sine_run
+00E1   30FC           00402         movlw  .252
+00E2   0223           00403         subwf  value,W  
+00E3   1903           00404         btfsc  STATUS,Z  ;check for end of table
+00E4   208A           00405         call poll       ;poll buttons
+00E5   3007           00406         movlw  HIGH sine        
+00E6   008A           00407         movwf  PCLATH
+00E7   0823           00408         movfw value
+00E8   2700           00409         call sine       ;load value from table
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 12
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00E9   0086           00410         movwf PORTB     ;output value
+00EA   0AA3           00411         incf value,f    ;increase row of table
+00EB   21C2           00412         call delay2     ;delay for next row
+Warning[203]: Found opcode in column 1. (return)
+00EC   0008           00413 return
+                      00414 
+                      00415 ;*************************************************************
+                      00416 ; Generate Trangle wave Function
+                      00417 ;*************************************************************
+                      00418 
+00ED                  00419 trangle_run
+                      00420 
+00ED   30FC           00421         movlw  .252
+00EE   0223           00422         subwf  value,W  
+00EF   1903           00423         btfsc  STATUS,Z  ;check for end of table
+00F0   208A           00424         call poll       ;polling for buttons
+00F1   3006           00425         movlw  HIGH trangle
+00F2   008A           00426         movwf  PCLATH
+00F3   0823           00427         movfw value 
+00F4   2600           00428         call trangle    ;loading value from table
+00F5   0086           00429         movwf PORTB     ;output value
+00F6   0AA3           00430         incf value,f    ;incrase row of table
+00F7   21C2           00431         call delay2     ;delay for next row
+                      00432 
+Warning[203]: Found opcode in column 1. (return)
+00F8   0008           00433 return
+                      00434 
+                      00435 ;*************************************************************
+                      00436 ; Generate Square wave Function
+                      00437 ;*************************************************************
+00F9                  00438 square_run
+                      00439         ;timer for polling buttons
+00F9   30FC           00440         movlw  .252 ; set time out value
+00FA   0223           00441         subwf  value,W  ;substrace timeout from current timer value
+00FB   1903           00442         btfsc  STATUS,Z ;check result for zero
+00FC   208A           00443         call poll       ; if so call button poll routine
+00FD   0AA3           00444         incf value,f    ;increase timer value by 1
+                      00445 
+00FE   30FF           00446         movlw 0xFF 
+00FF   0086           00447         movwf PORTB ;set portb to high
+0100   21D0           00448         call delaysq    ;delay
+0101   3000           00449         movlw 0x00      
+0102   0086           00450         movwf PORTB             ;set portb to low
+0103   21D0           00451         call delaysq    ;delay
+                      00452 
+Warning[203]: Found opcode in column 1. (return)
+0104   0008           00453 return
+                      00454 
+                      00455 ;*************************************************************
+                      00456 ; Amplitude Increment Function
+                      00457 ;*************************************************************
+0105                  00458 inc
+0105   21D9           00459         call delay3 ;delay sometime
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 13
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0106   1683           00460         bsf STATUS,RP0 ;bank1
+                      00461         
+Warning[209]: Missing quote
+0107   30EF           00462         movlw  b'11101111
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0108   021F           00463         subwf  VRCON,W  
+0109   1903           00464         btfsc  STATUS,Z ;check for max amplitude
+010A   290E           00465         goto volt_max   ;if so goto to volt_max
+                      00466 
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+010B   0A9F           00467         incf  VRCON,1 ;else incemnet by one step
+Warning[209]: Missing quote
+010C   30E0           00468         movlw b'11100000
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+010D   049F           00469         iorwf VRCON,1 ;make correct value for VRCON
+                      00470 
+Warning[207]: Found label after column 1. (volt_max)
+010E                  00471         volt_max
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+010E   081F           00472                 movfw VRCON
+010F   3C20           00473                 sublw .32
+0110   3C00           00474                 sublw 0
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0111   00A0           00475                 movwf volt
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0112   1220           00476                 bcf volt,4
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0113   12A0           00477                 bcf volt,5
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0114   1320           00478                 bcf volt,6
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0115   13A0           00479                 bcf volt,7
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0116   0820           00480                 movfw volt ;get lower nibble from VRCON,as step
+0117   1283           00481                 bcf STATUS,RP0 ;bank0
+0118   00B4           00482                 movwf volt1 ;store amplitude step
+                      00483 
+                      00484                 ;Load voltage value digits from table and show on lcd
+                      00485                 ;for high char
+0119   3008           00486                 movlw   0x08                                  
+011A   21FC           00487                 call    lcd_addr
+011B   3004           00488                 movlw high volt_h
+011C   008A           00489                 movwf PCLATH
+011D   0834           00490                 movfw volt1
+011E   2400           00491                 call volt_h
+011F   2202           00492                 call    lcd_data        
+                      00493 
+                      00494                 ;for low char
+0120   300A           00495                 movlw   0x0A                                  
+0121   21FC           00496                 call    lcd_addr
+0122   3004           00497                 movlw high volt_l
+0123   008A           00498                 movwf PCLATH
+0124   0834           00499                 movfw volt1
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 14
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0125   2414           00500                 call volt_l
+0126   2202           00501                 call    lcd_data        
+                      00502 
+                      00503                 ;writing vrcon to eeprom
+0127   1683           00504                 bsf STATUS, RP0 ;bank1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0128   081F           00505                 movfw  VRCON 
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0129   009A           00506                 movwf EEDATA ;copy VRCON to EEDATA
+012A   3002           00507                 movlw 0x02
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+012B   009B           00508                 movwf EEADR ;set address
+012C   1283           00509                 bcf STATUS, RP0 ;bank0
+012D   21B7           00510                 call write_eeprom ;write EEPROM
+                      00511 
+                      00512                 ;writing amplitude step to eeprom
+012E   0834           00513                 movfw volt1 ;copy step to W reg
+012F   1683           00514                 bsf STATUS, RP0 
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0130   009A           00515                 movwf EEDATA ;copy W to EEDATA
+0131   3003           00516                 movlw 0x03
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0132   009B           00517                 movwf EEADR ;set address
+0133   1283           00518                 bcf STATUS, RP0 ;bank0
+0134   21B7           00519                 call write_eeprom ;write EEPROM
+                      00520 
+Warning[203]: Found opcode in column 1. (return)
+0135   0008           00521 return
+                      00522 
+                      00523 ;*************************************************************
+                      00524 ; Amplitude Decrement Function
+                      00525 ;*************************************************************
+0136                  00526 dec
+0136   21D9           00527         call delay3 ;wait some time
+0137   1683           00528         bsf STATUS,RP0  ;goto bank1
+Warning[209]: Missing quote
+0138   30E0           00529         movlw  b'11100000 
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0139   021F           00530         subwf  VRCON,W  
+013A   1903           00531         btfsc  STATUS,Z ;check for min amplitude
+013B   293F           00532         goto volt_min   ;if min goto volt_min
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+013C   039F           00533         decf VRCON,1    ;else decremnt by 1 step
+Warning[209]: Missing quote
+013D   30E0           00534         movlw b'11100000 
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+013E   049F           00535         iorwf VRCON,1   ;make correct value for VRCON
+                      00536 
+Warning[207]: Found label after column 1. (volt_min)
+013F                  00537         volt_min
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+013F   081F           00538                 movfw VRCON
+0140   3C20           00539                 sublw .32
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 15
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0141   3C00           00540                 sublw 0
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0142   00A0           00541                 movwf volt
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0143   1220           00542                 bcf volt,4
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0144   12A0           00543                 bcf volt,5
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0145   1320           00544                 bcf volt,6
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0146   13A0           00545                 bcf volt,7
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0147   0820           00546                 movfw volt              ;get lower nibble from VRCON as voltage value
+0148   1283           00547                 bcf STATUS,RP0  ;goto bank0
+0149   00B4           00548                 movwf volt1             ;store amplitde value
+                      00549 
+                      00550                 ;Load voltage value digits from table and show on lcd
+                      00551                 ;for high char
+014A   3008           00552                 movlw   0x08                                  
+014B   21FC           00553                 call    lcd_addr
+014C   3004           00554                 movlw high volt_h
+014D   008A           00555                 movwf PCLATH
+014E   0834           00556                 movfw volt1
+014F   2400           00557                 call volt_h
+0150   2202           00558                 call    lcd_data        
+                      00559 
+                      00560                 ;for low char
+0151   300A           00561                 movlw   0x0A                                  
+0152   21FC           00562                 call    lcd_addr
+0153   3004           00563                 movlw high volt_l
+0154   008A           00564                 movwf PCLATH
+0155   0834           00565                 movfw volt1
+0156   2414           00566                 call volt_l
+0157   2202           00567                 call    lcd_data        
+                      00568 
+                      00569                 ;writing vrcon to eeprom
+                      00570                 ;write VRCON
+0158   1683           00571                 bsf STATUS, RP0 ;bank1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0159   081F           00572                 movfw  VRCON
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+015A   009A           00573                 movwf EEDATA ;copy VRCON to EEDATA
+015B   3002           00574                 movlw 0x02      ;set address
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+015C   009B           00575                 movwf EEADR 
+015D   1283           00576                 bcf STATUS, RP0 ;bank 1
+015E   21B7           00577                 call write_eeprom ;write EEPROM
+                      00578 
+                      00579                 ;write Voltage value
+015F   0834           00580                 movfw volt1     ;copy voltage value to W reg
+0160   1683           00581                 bsf STATUS, RP0 ;bank1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0161   009A           00582                 movwf EEDATA ;copy W to EEDATA
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 16
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0162   3003           00583                 movlw 0x03      
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0163   009B           00584                 movwf EEADR ;set address
+0164   1283           00585                 bcf STATUS, RP0 ;goto bank0
+0165   21B7           00586                 call write_eeprom ;write eeprom
+Warning[203]: Found opcode in column 1. (return)
+0166   0008           00587 return
+                      00588 
+                      00589 ;*************************************************************
+                      00590 ; Delay value increment(Frequncy Decrement) Function
+                      00591 ;*************************************************************
+0167                  00592 inc1
+0167   21D9           00593         call delay3     ;wait some time
+                      00594 
+0168   3016           00595         movlw  0x16
+0169   0227           00596         subwf  count_pos,W  
+016A   1D03           00597         btfss  STATUS,Z ;check for max delay state of 0x16
+Message[305]: Using default destination of 1 (file).
+016B   0AA7           00598         incf count_pos  ;if delay state < 0x16;increment
+                      00599 
+016C                  00600 disp_sqr
+                      00601 
+016C   1C24           00602         btfss mode,0
+016D   298A           00603         goto no_sqr             ;check for square mode;if not goto no_sqr
+                      00604 
+                      00605         ;if in square mode;load delay value from table and send to count_sq
+016E   3004           00606         movlw high sqr_delay
+016F   008A           00607         movwf PCLATH
+0170   0827           00608         movfw count_pos
+0171   2430           00609         call sqr_delay
+0172   00B5           00610         movwf count_sq
+                      00611 
+                      00612         ;send . & k chars to LCD for appropriate postions
+0173   3043           00613         movlw   0x43 ;set DDRAM address                                 
+0174   21FC           00614         call    lcd_addr                
+0175   302E           00615         movlw   '.'     ;data sent to W reg
+0176   2202           00616         call    lcd_data
+0177   3047           00617         movlw   0x47   ;set DDRAM address                                  
+0178   21FC           00618         call    lcd_addr                
+0179   306B           00619         movlw   'k'     ;data sent to W reg     
+017A   2202           00620         call    lcd_data
+                      00621 
+                      00622         ;Frequency values,load from table and sent to LCD for appropriate postions
+                      00623         ;load high digit
+017B   3042           00624         movlw   0x42                                  
+017C   21FC           00625         call    lcd_addr
+017D   3004           00626         movlw high sqr_high
+017E   008A           00627         movwf PCLATH
+017F   0827           00628         movfw count_pos
+0180   244E           00629         call sqr_high
+0181   2202           00630         call    lcd_data        
+                      00631 
+                      00632         ;load low digit
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 17
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0182   3044           00633         movlw   0x44                                  
+0183   21FC           00634         call    lcd_addr
+0184   3004           00635         movlw high sqr_low
+0185   008A           00636         movwf PCLATH
+0186   0827           00637         movfw count_pos
+0187   246C           00638         call sqr_low
+0188   2202           00639         call    lcd_data        
+                      00640 
+0189   29A8           00641         goto done_sqr   ;goto end if functions for square wave finishes
+                      00642 
+018A                  00643 no_sqr  ;if sine/trangle
+                      00644 
+                      00645         ;if in square mode;load delay value from table and send to count_si
+018A   3004           00646         movlw high sin_delay
+018B   008A           00647         movwf PCLATH
+018C   0827           00648         movfw count_pos
+018D   248A           00649         call sin_delay
+018E   00B6           00650         movwf count_si
+                      00651 
+                      00652         ;Frequency values,load from table and sent to LCD for appropriate postions
+                      00653         ;load and send high char
+018F   3042           00654         movlw   0x42                                  
+0190   21FC           00655         call    lcd_addr
+0191   3004           00656         movlw high sin_high
+0192   008A           00657         movwf PCLATH
+0193   0827           00658         movfw count_pos
+0194   24A8           00659         call sin_high
+0195   2202           00660         call    lcd_data        
+                      00661 
+                      00662         ;load and send mid char
+0196   3043           00663         movlw   0x43                                  
+0197   21FC           00664         call    lcd_addr
+0198   3004           00665         movlw high sin_mid
+0199   008A           00666         movwf PCLATH
+019A   0827           00667         movfw count_pos
+019B   24C6           00668         call sin_mid
+019C   2202           00669         call    lcd_data        
+                      00670 
+                      00671         ;load and send low char
+019D   3044           00672         movlw   0x44                                  
+019E   21FC           00673         call    lcd_addr
+019F   3004           00674         movlw high sin_low
+01A0   008A           00675         movwf PCLATH
+01A1   0827           00676         movfw count_pos
+01A2   24E2           00677         call sin_low
+01A3   2202           00678         call    lcd_data        
+                      00679 
+                      00680         ;erase the 'k' to obtain Hz display only
+01A4   3047           00681         movlw   0x47                                  
+01A5   21FC           00682         call    lcd_addr                
+01A6   3020           00683         movlw   ' '
+01A7   2202           00684         call    lcd_data
+                      00685 
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 18
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+01A8                  00686 done_sqr
+                      00687 
+                      00688         ;writing freq to eeprom
+01A8   0827           00689         movfw count_pos ;load delay postion to W reg
+01A9   1683           00690         bsf STATUS, RP0 ;bank 1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01AA   009A           00691         movwf EEDATA    ;set EEDATA to delay
+01AB   3005           00692         movlw 0x05              ;set address to write
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01AC   009B           00693         movwf EEADR     ;set EEADR to address
+01AD   1283           00694         bcf STATUS, RP0 ;bank 0
+01AE   21B7           00695         call write_eeprom       ;write EEPROM
+                      00696 
+Warning[203]: Found opcode in column 1. (return)
+01AF   0008           00697 return
+                      00698 
+                      00699 ;*************************************************************
+                      00700 ; Delay value decrement(Frequncy Increment) Function
+                      00701 ;*************************************************************
+01B0                  00702 dec1
+01B0   21D9           00703         call delay3     ;wait some time
+01B1   3001           00704         movlw  .1
+01B2   0227           00705         subwf  count_pos,W  
+01B3   1D03           00706         btfss  STATUS,Z         ;check for min state of 1
+Message[305]: Using default destination of 1 (file).
+01B4   03A7           00707         decf count_pos  ;if delay state > 1;decrement
+01B5   216C           00708         call disp_sqr   ;show freqency ..etc on display
+Warning[203]: Found opcode in column 1. (return)
+01B6   0008           00709 return
+                      00710 
+                      00711 
+                      00712 ;*************************************************************
+                      00713 ; Write EEPROM Function
+                      00714 ;*************************************************************
+01B7                  00715 write_eeprom 
+01B7   1683           00716         bsf STATUS, RP0 ;goto bank1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01B8   151C           00717         bsf EECON1, WREN        ;write enable
+01B9   3055           00718         movlw 0x55 
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01BA   009D           00719         movwf EECON2
+01BB   30AA           00720         movlw 0xAA 
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01BC   009D           00721         movwf EECON2    ;give the sequnce to enter
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01BD   149C           00722         bsf EECON1, WR  ;write
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01BE   189C           00723         btfsc EECON1, WR
+01BF   29BE           00724         goto $-1        ;wait till writing finishes
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+01C0   111C           00725         bcf EECON1, WREN ;write disable
+01C1   1283           00726         bcf STATUS, RP0 ;goto bank0
+                      00727         ;return after small delay in next routine
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 19
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00728 ;*************************************************************
+                      00729 ; Delay loop for Sine/Trangular signals
+                      00730 ;*************************************************************
+01C2                  00731 delay2  
+01C2   0836           00732                 movfw count_si  
+01C3   00A5           00733                 movwf count4    ;load delay value from count_si
+Warning[207]: Found label after column 1. (loop0)
+01C4                  00734                 loop0
+Message[305]: Using default destination of 1 (file).
+01C4   0BA5           00735                         decfsz  count4
+01C5   29C4           00736                         goto    loop0   ;delay loop
+Warning[203]: Found opcode in column 1. (return)
+01C6   0008           00737 return
+                      00738 
+                      00739 ;*************************************************************
+                      00740 ; Delay short time,pre defined
+                      00741 ;*************************************************************
+01C7                  00742 delay2x 
+01C7   0848           00743                 movfw .72
+01C8   00A8           00744                 movwf count6
+01C9   3005           00745                 movlw .5
+01CA   00A9           00746                 movwf count7
+                      00747                 
+                      00748 
+Warning[207]: Found label after column 1. (loop0x)
+01CB                  00749                 loop0x
+Warning[207]: Found label after column 1. (loop11x)
+01CB                  00750                         loop11x
+Message[305]: Using default destination of 1 (file).
+01CB   0BA9           00751                                 decfsz  count7
+01CC   29CB           00752                                 goto    loop11x ;delay loop1
+Message[305]: Using default destination of 1 (file).
+01CD   0BA8           00753                         decfsz  count6
+01CE   29CB           00754                         goto    loop0x  ;delay loop2
+                      00755                 
+Warning[203]: Found opcode in column 1. (return)
+01CF   0008           00756 return
+                      00757 
+                      00758 ;*************************************************************
+                      00759 ; Delay loop for Square signal
+                      00760 ;*************************************************************
+01D0                  00761 delaysq 
+01D0   3006           00762         movlw 0x06      ;set calibration
+01D1   00A6           00763         movwf count5
+01D2                  00764 sq_s
+01D2   0835           00765         movfw count_sq
+                      00766 
+01D3   00A5           00767         movwf   count4
+01D4                  00768 delaysq_0
+01D4   0BA5           00769         decfsz  count4, f
+01D5   29D4           00770         goto    delaysq_0       ;delay loop 1
+Message[305]: Using default destination of 1 (file).
+01D6   0BA6           00771         decfsz  count5
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 20
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+Warning[203]: Found opcode in column 1. (goto)
+01D7   29D2           00772 goto sq_s       ;delay loop2
+                      00773 
+                      00774                 
+Warning[203]: Found opcode in column 1. (return)
+01D8   0008           00775 return
+                      00776 
+                      00777 ;*************************************************************
+                      00778 ; Delay delay2x for n times
+                      00779 ;*************************************************************
+01D9                  00780 delay3
+01D9   300A           00781                 movlw .10
+01DA   00A2           00782                 movwf count3
+Warning[207]: Found label after column 1. (loop3)
+01DB                  00783                 loop3
+01DB   21C7           00784                 call delay2x
+Message[305]: Using default destination of 1 (file).
+01DC   0BA2           00785                 decfsz  count3 ;delay loop
+                      00786                 
+01DD   29DB           00787                 goto loop3
+Warning[203]: Found opcode in column 1. (call)
+01DE   222C           00788 call delay_1ms  ; 1ms delay
+Warning[203]: Found opcode in column 1. (return)
+01DF   0008           00789 return
+                      00790 
+                      00791 ;*************************************************************
+                      00792 ; Initialize LCD 
+                      00793 ;*************************************************************
+01E0                  00794 lcd_init
+01E0   2227           00795         call    delay ;delay sometime
+                      00796         
+01E1   1206           00797         bcf     lcd_rs                  ;command mode
+01E2   1005           00798         bcf     lcd_e
+01E3   1406           00799         bsf     lcd_4
+01E4   1486           00800         bsf     lcd_5
+01E5   1106           00801         bcf     lcd_6
+01E6   1186           00802         bcf     lcd_7                   ;set pins as 001100 to init LCD
+01E7   221E           00803         call    lcd_clock       ;give clock 
+                      00804         
+01E8   3004           00805         movlw   0x04
+01E9   2227           00806         call    delay   ;delay 4ms
+                      00807         
+01EA   221E           00808         call    lcd_clock       ;give cloc
+01EB   2237           00809         call    short_dly
+01EC   2237           00810         call    short_dly       ;short delay ~100us
+01ED   221E           00811         call    lcd_clock       ;give clock
+                      00812 
+                      00813         
+01EE   1006           00814         bcf     lcd_4   ;set 4-bit mode
+01EF   221E           00815         call    lcd_clock       ;give clock
+                      00816 
+                      00817         
+01F0   3028           00818         movlw   b'00101000'             ;function set command
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 21
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+01F1   2202           00819         call    lcd_data                ;send as data
+                      00820         
+01F2   300C           00821         movlw   b'00001100'             ;display control set
+01F3   2202           00822         call    lcd_data                ;send as data
+                      00823         
+01F4   3006           00824         movlw   b'00000110'             ;entry mode set
+01F5   2202           00825         call    lcd_data                ;send as data
+                      00826 
+01F6   3010           00827         movlw   b'00010000'             ;display shift set
+01F7   2202           00828         call    lcd_data                ;send as data
+                      00829 
+01F8   3001           00830         movlw   b'00000001'             ;clear screen command
+01F9   2202           00831         call    lcd_data                ;send as data
+                      00832 
+01FA   1606           00833         bsf     lcd_rs                  ;data mode
+01FB   0008           00834         return
+                      00835 
+                      00836 
+                      00837 ;*************************************************************
+                      00838 ; Goto position
+                      00839 ;*************************************************************
+01FC                  00840 lcd_addr
+01FC   1206           00841         bcf     lcd_rs                  ;command mode
+01FD   3880           00842         iorlw   0x80            ;set DDRAM address + postion
+01FE   2202           00843         call    lcd_data        ;send to lcd
+01FF   1606           00844         bsf     lcd_rs                  ;switch to data mode
+0200   222C           00845         call    delay_1ms       ;wait some time
+0201   0008           00846         return
+                      00847 
+                      00848 
+                      00849 ;*************************************************************
+                      00850 ; Send data as 2 nibbles to LCD
+                      00851 ;*************************************************************
+0202                  00852 lcd_data        
+0202   00B3           00853         movwf   lcd_temp        ;buffer to store lcd data
+0203   1006           00854         bcf     lcd_4
+0204   1086           00855         bcf     lcd_5
+0205   1106           00856         bcf     lcd_6
+0206   1186           00857         bcf     lcd_7                   ;clear data lines
+                      00858 
+0207   1BB3           00859         btfsc   lcd_temp, 7
+0208   1586           00860                 bsf     lcd_7
+0209   1B33           00861         btfsc   lcd_temp, 6
+020A   1506           00862                 bsf     lcd_6
+020B   1AB3           00863         btfsc   lcd_temp, 5
+020C   1486           00864                 bsf     lcd_5
+020D   1A33           00865         btfsc   lcd_temp, 4
+020E   1406           00866                 bsf     lcd_4                   ;set higher nibble to output lines
+020F   221E           00867         call    lcd_clock               ;clock signal
+                      00868         
+                      00869 
+0210   1006           00870         bcf     lcd_4
+0211   1086           00871         bcf     lcd_5
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 22
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0212   1106           00872         bcf     lcd_6
+0213   1186           00873         bcf     lcd_7                   ;clear data lines
+                      00874 
+0214   19B3           00875         btfsc   lcd_temp, 3
+0215   1586           00876                 bsf     lcd_7
+0216   1933           00877         btfsc   lcd_temp, 2
+0217   1506           00878                 bsf     lcd_6
+0218   18B3           00879         btfsc   lcd_temp, 1
+0219   1486           00880                 bsf     lcd_5
+021A   1833           00881         btfsc   lcd_temp, 0
+021B   1406           00882                 bsf     lcd_4                   ;set lower nibble to data lines
+021C   221E           00883         call    lcd_clock               ;clock signal
+                      00884 
+021D   0008           00885         return
+                      00886 
+                      00887 
+                      00888 ;*************************************************************
+                      00889 ; Clock signal for LCD
+                      00890 ;*************************************************************
+021E                  00891 lcd_clock 
+021E   1405           00892         bsf     lcd_e   ;clock enable
+021F   0000           00893         nop                     
+0220   0000           00894         nop                             
+0221   0000           00895         nop                              
+0222   0000           00896     nop         ;pulse          
+0223   1005           00897         bcf     lcd_e ;clock disable
+0224   222C           00898         call    delay_1ms       
+0225   222C           00899         call    delay_1ms       ;wait some time
+0226   0008           00900         return
+                      00901 
+                      00902 
+                      00903 
+                      00904 ;*************************************************************
+                      00905 ; 1ms * W delay
+                      00906 ;*************************************************************
+0227                  00907 delay
+0227   00B0           00908         movwf   delay_0
+0228                  00909 delay_w
+0228   222C           00910         call    delay_1ms
+0229   0BB0           00911         decfsz  delay_0, F
+022A   2A28           00912         goto    delay_w
+022B   0008           00913         return
+                      00914 
+                      00915 
+                      00916 ;*************************************************************  
+                      00917 ; 1ms delay.
+                      00918 ;*************************************************************
+022C                  00919 delay_1ms
+                      00920                         
+022C   30E6           00921         movlw   0xE6
+022D   00B1           00922         movwf   delay_1
+022E   3004           00923         movlw   0x04
+022F   00B2           00924         movwf   delay_2
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 23
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0230                  00925 delay_1ms_0
+0230   0BB1           00926         decfsz  delay_1, f
+0231   2A33           00927         goto    $+2
+0232   0BB2           00928         decfsz  delay_2, f
+0233   2A30           00929         goto    delay_1ms_0
+                      00930                 
+0234   2A35           00931         goto    $+1
+0235   0000           00932         nop
+                      00933                         
+0236   0008           00934         return
+                      00935 
+                      00936 ;*************************************************************  
+                      00937 ; 40us delay.
+                      00938 ;*************************************************************
+0237                  00939 short_dly
+                      00940 
+0237   3041           00941         movlw   0x41
+0238   00B1           00942         movwf   delay_1
+0239                  00943 short_dly_0
+0239   0BB1           00944         decfsz  delay_1, f
+023A   2A39           00945         goto    short_dly_0
+023B   0008           00946         return
+                      00947 
+                      00948 ;*************************************************************
+                      00949 ; Table for Amplitude-High digit
+                      00950 ;*************************************************************
+Warning[205]: Found directive in column 1. (org)
+0400                  00951 org 0x400
+0400                  00952 volt_h
+0400   0782           00953         addwf PCL,f
+0401   3430 3430 3431 00954         dt .48,.48,.49,.49,.50,.50,.51,.51,.52,.52,.53,.53,.54,.54,.55,'M'
+       3431 3432 3432 
+       3433 3433 3434 
+       3434 3435 3435 
+       3436 3436 3437 
+       344D 
+                      00955 
+                      00956 ;*************************************************************
+                      00957 ; Table for Amplitude-Low digit
+                      00958 ;*************************************************************
+Warning[205]: Found directive in column 1. (org)
+0414                  00959 org 0x414
+0414                  00960 volt_l
+0414   0782           00961         addwf PCL,f
+0415   3430 3435 3430 00962         dt .48,.53,.48,.53,.48,.53,.48,.53,.48,.53,.48,.53,.48,.53,.48,'X'
+       3435 3430 3435 
+       3430 3435 3430 
+       3435 3430 3435 
+       3430 3435 3430 
+       3458 
+                      00963 
+                      00964 ;*************************************************************
+                      00965 ; Table for Delay in Square mode
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 24
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00966 ;*************************************************************
+Warning[205]: Found directive in column 1. (org)
+0430                  00967 org 0x430
+0430                  00968 sqr_delay
+0430   0782           00969         addwf PCL,f
+0431   340A 340A 340B 00970         dt 0x0A,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,0x10,0x11,0x12,0x13,0x15,0x17,0x1A,0x1D,0x20,0x25,0x2C,0x3
+                            5,0x43,0x5A,0x88,0xFF
+       340C 340D 340E 
+       340F 3410 3411 
+       3412 3413 3415 
+       3417 341A 341D 
+       3420 3425 342C 
+       3435 3443 345A 
+       3488 34FF 
+                      00971 
+                      00972 ;*************************************************************
+                      00973 ; Table for Frequncy-Square-High digit
+                      00974 ;*************************************************************
+Warning[205]: Found directive in column 1. (org)
+044E                  00975 org 0x44E
+044E                  00976 sqr_high
+044E   0782           00977         addwf PCL,f
+044F   340A 3442 3441 00978         dt 0x0A,'B','A','9','9','8','8','7','7','6','6','6','5','5','4','4','3','3','2','2','1','1','0'
+       3439 3439 3438 
+       3438 3437 3437 
+       3436 3436 3436 
+       3435 3435 3434 
+       3434 3433 3433 
+       3432 3432 3431 
+       3431 3430 
+                      00979 
+                      00980 ;*************************************************************
+                      00981 ; Table for Frequncy-Square-Low digit
+                      00982 ;*************************************************************
+Warning[205]: Found directive in column 1. (org)
+046C                  00983 org 0x46C
+046C                  00984 sqr_low
+046C   0782           00985         addwf PCL,f
+046D   340A 3435 3435 00986         dt 0x0A,'5','5','8','1','6','1','6','2','9','5','0','5','0','5','0','5','0','5','0','5','0','5'
+       3438 3431 3436 
+       3431 3436 3432 
+       3439 3435 3430 
+       3435 3430 3435 
+       3430 3435 3430 
+       3435 3430 3435 
+       3430 3435 
+                      00987 
+                      00988 ;*************************************************************
+                      00989 ; Table for Delay in Sine/Trangle mode
+                      00990 ;*************************************************************
+Warning[205]: Found directive in column 1. (org)
+048A                  00991 org 0x48A
+048A                  00992 sin_delay
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 25
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+048A   0782           00993         addwf PCL,f
+048B   3401 3401 3402 00994         dt .1,.1,.2,.4,.5,.6,.7,.8,.9,.10,.11,.12,.13,.14,.16,.19,.23,.27,.34,.42,.56,.78,.96
+       3404 3405 3406 
+       3407 3408 3409 
+       340A 340B 340C 
+       340D 340E 3410 
+       3413 3417 341B 
+       3422 342A 3438 
+       344E 3460 
+                      00995 
+                      00996 ;*************************************************************
+                      00997 ; Table for Frequncy-Sine/Trangle-High digit
+                      00998 ;*************************************************************
+Warning[205]: Found directive in column 1. (org)
+04A8                  00999 org 0x4A8
+04A8                  01000 sin_high
+04A8   0782           01001         addwf PCL,f
+04A9   340A 3442 3441 01002         dt 0x0A,'B','A','9','8','8','7','7','6','6','6','5','5','5','5','4','4','3','3','2','2','1','1'
+       3439 3438 3438 
+       3437 3437 3436 
+       3436 3436 3435 
+       3435 3435 3435 
+       3434 3434 3433 
+       3433 3432 3432 
+       3431 3431 
+                      01003 
+                      01004 ;*************************************************************
+                      01005 ; Table for Frequncy-Sine/Trangle-Mid digit
+                      01006 ;*************************************************************
+Warning[205]: Found directive in column 1. (org)
+04C6                  01007 org 0x4C6
+04C6                  01008 sin_mid
+04C6   0782           01009         addwf PCL,f
+04C7   340A 3436 3437 01010         dt 0x0A,'6','7','2','6','0','6','2','8','5','2','9','7','4','0','5','0','5','0','5','0','5','2'
+       3432 3436 3430 
+       3436 3432 3438 
+       3435 3432 3439 
+       3437 3434 3430 
+       3435 3430 3435 
+       3430 3435 3430 
+       3435 3432 
+                      01011 
+                      01012 ;*************************************************************
+                      01013 ; Table for Frequncy-Sine/Trangle-Low digit
+                      01014 ;*************************************************************
+Warning[205]: Found directive in column 1. (org)
+04E2                  01015 org 0x4E2
+04E2                  01016 sin_low
+04E2   0782           01017         addwf PCL,f
+04E3   340A 3435 3430 01018         dt 0x0A,'5','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','0','5'
+       3430 3430 3430 
+       3430 3430 3430 
+       3430 3430 3430 
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 26
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+       3430 3430 3430 
+       3430 3430 3430 
+       3430 3430 3430 
+       3430 3435 
+                      01019 
+                      01020 ;*************************************************************
+                      01021 ; Table for Sine signal
+                      01022 ;*************************************************************
+Warning[205]: Found directive in column 1. (org)
+0700                  01023 org 0x700
+0700                  01024 sine
+0700   0782           01025          addwf PCL,1    
+0701   3480           01026          retlw .128 
+0702   3486           01027          retlw .134 
+0703   348D           01028          retlw .141 
+0704   3493           01029          retlw .147 
+0705   3499           01030          retlw .153 
+0706   349F           01031          retlw .159 
+0707   34A5           01032          retlw .165 
+0708   34AB           01033          retlw .171 
+0709   34B1           01034          retlw .177 
+070A   34B7           01035          retlw .183 
+070B   34BD           01036          retlw .189 
+070C   34C2           01037          retlw .194 
+070D   34C8           01038          retlw .200 
+070E   34CD           01039          retlw .205 
+070F   34D2           01040          retlw .210 
+0710   34D6           01041          retlw .214 
+0711   34DB           01042          retlw .219 
+0712   34DF           01043          retlw .223 
+0713   34E3           01044          retlw .227 
+0714   34E7           01045          retlw .231 
+0715   34EB           01046          retlw .235 
+0716   34EE           01047          retlw .238 
+0717   34F1           01048          retlw .241 
+0718   34F4           01049          retlw .244 
+0719   34F6           01050          retlw .246 
+071A   34F8           01051          retlw .248 
+071B   34FA           01052          retlw .250 
+071C   34FC           01053          retlw .252 
+071D   34FD           01054          retlw .253 
+071E   34FE           01055          retlw .254 
+071F   34FF           01056          retlw .255 
+0720   34FF           01057          retlw .255 
+0721   34FF           01058          retlw .255 
+0722   34FF           01059          retlw .255 
+0723   34FE           01060          retlw .254 
+0724   34FD           01061          retlw .253 
+0725   34FC           01062          retlw .252 
+0726   34FA           01063          retlw .250 
+0727   34F8           01064          retlw .248 
+0728   34F6           01065          retlw .246 
+0729   34F4           01066          retlw .244 
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 27
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+072A   34F1           01067          retlw .241 
+072B   34EE           01068          retlw .238 
+072C   34EB           01069          retlw .235 
+072D   34E7           01070          retlw .231 
+072E   34E3           01071          retlw .227 
+072F   34DF           01072          retlw .223 
+0730   34DB           01073          retlw .219 
+0731   34D6           01074          retlw .214 
+0732   34D2           01075          retlw .210 
+0733   34CD           01076          retlw .205 
+0734   34C8           01077          retlw .200 
+0735   34C2           01078          retlw .194 
+0736   34BD           01079          retlw .189 
+0737   34B7           01080          retlw .183 
+0738   34B1           01081          retlw .177 
+0739   34AB           01082          retlw .171 
+073A   34A5           01083          retlw .165 
+073B   349F           01084          retlw .159 
+073C   3499           01085          retlw .153 
+073D   3493           01086          retlw .147 
+073E   348D           01087          retlw .141 
+073F   3486           01088          retlw .134 
+0740   3480           01089          retlw .128 
+0741   347A           01090          retlw .122 
+0742   3473           01091          retlw .115 
+0743   346D           01092          retlw .109 
+0744   3467           01093          retlw .103 
+0745   3461           01094          retlw .97 
+0746   345B           01095          retlw .91 
+0747   3455           01096          retlw .85 
+0748   344F           01097          retlw .79 
+0749   3449           01098          retlw .73 
+074A   3443           01099          retlw .67 
+074B   343E           01100          retlw .62 
+074C   3438           01101          retlw .56 
+074D   3433           01102          retlw .51 
+074E   342E           01103          retlw .46 
+074F   342A           01104          retlw .42 
+0750   3425           01105          retlw .37 
+0751   3421           01106          retlw .33 
+0752   341D           01107          retlw .29 
+0753   3419           01108          retlw .25 
+0754   3415           01109          retlw .21 
+0755   3412           01110          retlw .18 
+0756   340F           01111          retlw .15 
+0757   340C           01112          retlw .12 
+0758   340A           01113          retlw .10 
+0759   3408           01114          retlw .8 
+075A   3406           01115          retlw .6 
+075B   3404           01116          retlw .4 
+075C   3403           01117          retlw .3 
+075D   3402           01118          retlw .2 
+075E   3401           01119          retlw .1 
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 28
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+075F   3401           01120          retlw .1 
+0760   3401           01121          retlw .1 
+0761   3401           01122          retlw .1 
+0762   3402           01123          retlw .2 
+0763   3403           01124          retlw .3 
+0764   3404           01125          retlw .4 
+0765   3406           01126          retlw .6 
+0766   3408           01127          retlw .8 
+0767   340A           01128          retlw .10 
+0768   340C           01129          retlw .12 
+0769   340F           01130          retlw .15 
+076A   3412           01131          retlw .18 
+076B   3415           01132          retlw .21 
+076C   3419           01133          retlw .25 
+076D   341D           01134          retlw .29 
+076E   3421           01135          retlw .33 
+076F   3425           01136          retlw .37 
+0770   342A           01137          retlw .42 
+0771   342E           01138          retlw .46 
+0772   3433           01139          retlw .51 
+0773   3439           01140          retlw .57 
+0774   343E           01141          retlw .62 
+0775   3443           01142          retlw .67 
+0776   3449           01143          retlw .73 
+0777   344F           01144          retlw .79 
+0778   3455           01145          retlw .85 
+0779   345B           01146          retlw .91 
+077A   3461           01147          retlw .97 
+077B   3467           01148          retlw .103 
+077C   346D           01149          retlw .109 
+077D   3473           01150          retlw .115 
+077E   347A           01151          retlw .122 
+077F   3480           01152          retlw .128 
+0780   3486           01153          retlw .134 
+0781   348D           01154          retlw .141 
+0782   3493           01155          retlw .147 
+0783   3499           01156          retlw .153 
+0784   349F           01157          retlw .159 
+0785   34A6           01158          retlw .166 
+0786   34AC           01159          retlw .172 
+0787   34B1           01160          retlw .177 
+0788   34B7           01161          retlw .183 
+0789   34BD           01162          retlw .189 
+078A   34C2           01163          retlw .194 
+078B   34C8           01164          retlw .200 
+078C   34CD           01165          retlw .205 
+078D   34D2           01166          retlw .210 
+078E   34D6           01167          retlw .214 
+078F   34DB           01168          retlw .219 
+0790   34DF           01169          retlw .223 
+0791   34E3           01170          retlw .227 
+0792   34E7           01171          retlw .231 
+0793   34EB           01172          retlw .235 
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 29
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0794   34EE           01173          retlw .238 
+0795   34F1           01174          retlw .241 
+0796   34F4           01175          retlw .244 
+0797   34F6           01176          retlw .246 
+0798   34F8           01177          retlw .248 
+0799   34FA           01178          retlw .250 
+079A   34FC           01179          retlw .252 
+079B   34FD           01180          retlw .253 
+079C   34FE           01181          retlw .254 
+079D   34FF           01182          retlw .255 
+079E   34FF           01183          retlw .255 
+079F   34FF           01184          retlw .255 
+07A0   34FF           01185          retlw .255 
+07A1   34FE           01186          retlw .254 
+07A2   34FD           01187          retlw .253 
+07A3   34FC           01188          retlw .252 
+07A4   34FA           01189          retlw .250 
+07A5   34F8           01190          retlw .248 
+07A6   34F6           01191          retlw .246 
+07A7   34F4           01192          retlw .244 
+07A8   34F1           01193          retlw .241 
+07A9   34EE           01194          retlw .238 
+07AA   34EB           01195          retlw .235 
+07AB   34E7           01196          retlw .231 
+07AC   34E3           01197          retlw .227 
+07AD   34DF           01198          retlw .223 
+07AE   34DB           01199          retlw .219 
+07AF   34D6           01200          retlw .214 
+07B0   34D2           01201          retlw .210 
+07B1   34CD           01202          retlw .205 
+07B2   34C7           01203          retlw .199 
+07B3   34C2           01204          retlw .194 
+07B4   34BD           01205          retlw .189 
+07B5   34B7           01206          retlw .183 
+07B6   34B1           01207          retlw .177 
+07B7   34AB           01208          retlw .171 
+07B8   34A5           01209          retlw .165 
+07B9   349F           01210          retlw .159 
+07BA   3499           01211          retlw .153 
+07BB   3493           01212          retlw .147 
+07BC   348C           01213          retlw .140 
+07BD   3486           01214          retlw .134 
+07BE   3480           01215          retlw .128 
+07BF   347A           01216          retlw .122 
+07C0   3473           01217          retlw .115 
+07C1   346D           01218          retlw .109 
+07C2   3467           01219          retlw .103 
+07C3   3461           01220          retlw .97 
+07C4   345A           01221          retlw .90 
+07C5   3454           01222          retlw .84 
+07C6   344F           01223          retlw .79 
+07C7   3449           01224          retlw .73 
+07C8   3443           01225          retlw .67 
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 30
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+07C9   343E           01226          retlw .62 
+07CA   3438           01227          retlw .56 
+07CB   3433           01228          retlw .51 
+07CC   342E           01229          retlw .46 
+07CD   3429           01230          retlw .41 
+07CE   3425           01231          retlw .37 
+07CF   3421           01232          retlw .33 
+07D0   341D           01233          retlw .29 
+07D1   3419           01234          retlw .25 
+07D2   3415           01235          retlw .21 
+07D3   3412           01236          retlw .18 
+07D4   340F           01237          retlw .15 
+07D5   340C           01238          retlw .12 
+07D6   340A           01239          retlw .10 
+07D7   3408           01240          retlw .8 
+07D8   3406           01241          retlw .6 
+07D9   3404           01242          retlw .4 
+07DA   3403           01243          retlw .3 
+07DB   3402           01244          retlw .2 
+07DC   3401           01245          retlw .1 
+07DD   3401           01246          retlw .1 
+07DE   3401           01247          retlw .1 
+07DF   3401           01248          retlw .1 
+07E0   3402           01249          retlw .2 
+07E1   3403           01250          retlw .3 
+07E2   3404           01251          retlw .4 
+07E3   3406           01252          retlw .6 
+07E4   3408           01253          retlw .8 
+07E5   340A           01254          retlw .10 
+07E6   340C           01255          retlw .12 
+07E7   340F           01256          retlw .15 
+07E8   3412           01257          retlw .18 
+07E9   3415           01258          retlw .21 
+07EA   3419           01259          retlw .25 
+07EB   341D           01260          retlw .29 
+07EC   3421           01261          retlw .33 
+07ED   3425           01262          retlw .37 
+07EE   342A           01263          retlw .42 
+07EF   342F           01264          retlw .47 
+07F0   3433           01265          retlw .51 
+07F1   3439           01266          retlw .57 
+07F2   343E           01267          retlw .62 
+07F3   3443           01268          retlw .67 
+07F4   3449           01269          retlw .73 
+07F5   344F           01270          retlw .79 
+07F6   3455           01271          retlw .85 
+07F7   345B           01272          retlw .91 
+07F8   3461           01273          retlw .97 
+07F9   3467           01274          retlw .103 
+07FA   346D           01275          retlw .109 
+07FB   3474           01276          retlw .116 
+07FC   347A           01277          retlw .122 
+                      01278 
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 31
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      01279 ;*************************************************************
+                      01280 ; Table for Trangle signal
+                      01281 ;*************************************************************
+Warning[205]: Found directive in column 1. (org)
+0600                  01282 org 0x600
+0600                  01283 trangle
+0600   0782           01284          addwf PCL,1
+0601   3400           01285          retlw .0 
+0602   3404           01286          retlw .4 
+0603   3408           01287          retlw .8 
+0604   340C           01288          retlw .12 
+0605   3410           01289          retlw .16 
+0606   3414           01290          retlw .20 
+0607   3418           01291          retlw .24 
+0608   341C           01292          retlw .28 
+0609   3420           01293          retlw .32 
+060A   3424           01294          retlw .36 
+060B   3428           01295          retlw .40 
+060C   342C           01296          retlw .44 
+060D   3430           01297          retlw .48 
+060E   3434           01298          retlw .52 
+060F   3438           01299          retlw .56 
+0610   343C           01300          retlw .60 
+0611   3440           01301          retlw .64 
+0612   3444           01302          retlw .68 
+0613   3448           01303          retlw .72 
+0614   344C           01304          retlw .76 
+0615   3450           01305          retlw .80 
+0616   3455           01306          retlw .85 
+0617   3459           01307          retlw .89 
+0618   345D           01308          retlw .93 
+0619   3461           01309          retlw .97 
+061A   3465           01310          retlw .101 
+061B   3469           01311          retlw .105 
+061C   346D           01312          retlw .109 
+061D   3471           01313          retlw .113 
+061E   3475           01314          retlw .117 
+061F   3479           01315          retlw .121 
+0620   347D           01316          retlw .125 
+0621   3481           01317          retlw .129 
+0622   3485           01318          retlw .133 
+0623   3489           01319          retlw .137 
+0624   348D           01320          retlw .141 
+0625   3491           01321          retlw .145 
+0626   3495           01322          retlw .149 
+0627   3499           01323          retlw .153 
+0628   349D           01324          retlw .157 
+0629   34A1           01325          retlw .161 
+062A   34A5           01326          retlw .165 
+062B   34AA           01327          retlw .170 
+062C   34AE           01328          retlw .174 
+062D   34B2           01329          retlw .178 
+062E   34B6           01330          retlw .182 
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 32
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+062F   34BA           01331          retlw .186 
+0630   34BE           01332          retlw .190 
+0631   34C2           01333          retlw .194 
+0632   34C6           01334          retlw .198 
+0633   34CA           01335          retlw .202 
+0634   34CE           01336          retlw .206 
+0635   34D2           01337          retlw .210 
+0636   34D6           01338          retlw .214 
+0637   34DA           01339          retlw .218 
+0638   34DE           01340          retlw .222 
+0639   34E2           01341          retlw .226 
+063A   34E6           01342          retlw .230 
+063B   34EA           01343          retlw .234 
+063C   34EE           01344          retlw .238 
+063D   34F2           01345          retlw .242 
+063E   34F6           01346          retlw .246 
+063F   34FA           01347          retlw .250 
+0640   34FF           01348          retlw .255 
+0641   34FB           01349          retlw .251 
+0642   34F7           01350          retlw .247 
+0643   34F3           01351          retlw .243 
+0644   34EF           01352          retlw .239 
+0645   34EB           01353          retlw .235 
+0646   34E7           01354          retlw .231 
+0647   34E3           01355          retlw .227 
+0648   34DF           01356          retlw .223 
+0649   34DB           01357          retlw .219 
+064A   34D7           01358          retlw .215 
+064B   34D3           01359          retlw .211 
+064C   34CF           01360          retlw .207 
+064D   34CB           01361          retlw .203 
+064E   34C7           01362          retlw .199 
+064F   34C3           01363          retlw .195 
+0650   34BF           01364          retlw .191 
+0651   34BB           01365          retlw .187 
+0652   34B7           01366          retlw .183 
+0653   34B3           01367          retlw .179 
+0654   34AF           01368          retlw .175 
+0655   34AA           01369          retlw .170 
+0656   34A6           01370          retlw .166 
+0657   34A2           01371          retlw .162 
+0658   349E           01372          retlw .158 
+0659   349A           01373          retlw .154 
+065A   3496           01374          retlw .150 
+065B   3492           01375          retlw .146 
+065C   348E           01376          retlw .142 
+065D   348A           01377          retlw .138 
+065E   3486           01378          retlw .134 
+065F   3482           01379          retlw .130 
+0660   347E           01380          retlw .126 
+0661   347A           01381          retlw .122 
+0662   3476           01382          retlw .118 
+0663   3472           01383          retlw .114 
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 33
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0664   346E           01384          retlw .110 
+0665   346A           01385          retlw .106 
+0666   3466           01386          retlw .102 
+0667   3462           01387          retlw .98 
+0668   345E           01388          retlw .94 
+0669   345A           01389          retlw .90 
+066A   3455           01390          retlw .85 
+066B   3451           01391          retlw .81 
+066C   344D           01392          retlw .77 
+066D   3449           01393          retlw .73 
+066E   3445           01394          retlw .69 
+066F   3441           01395          retlw .65 
+0670   343D           01396          retlw .61 
+0671   3439           01397          retlw .57 
+0672   3435           01398          retlw .53 
+0673   3431           01399          retlw .49 
+0674   342D           01400          retlw .45 
+0675   3429           01401          retlw .41 
+0676   3425           01402          retlw .37 
+0677   3421           01403          retlw .33 
+0678   341D           01404          retlw .29 
+0679   3419           01405          retlw .25 
+067A   3415           01406          retlw .21 
+067B   3411           01407          retlw .17 
+067C   340D           01408          retlw .13 
+067D   3409           01409          retlw .9 
+067E   3405           01410          retlw .5 
+067F   3400           01411          retlw .0 
+0680   3404           01412          retlw .4 
+0681   3408           01413          retlw .8 
+0682   340C           01414          retlw .12 
+0683   3410           01415          retlw .16 
+0684   3414           01416          retlw .20 
+0685   3418           01417          retlw .24 
+0686   341C           01418          retlw .28 
+0687   3420           01419          retlw .32 
+0688   3424           01420          retlw .36 
+0689   3428           01421          retlw .40 
+068A   342C           01422          retlw .44 
+068B   3430           01423          retlw .48 
+068C   3434           01424          retlw .52 
+068D   3438           01425          retlw .56 
+068E   343C           01426          retlw .60 
+068F   3440           01427          retlw .64 
+0690   3444           01428          retlw .68 
+0691   3448           01429          retlw .72 
+0692   344C           01430          retlw .76 
+0693   3450           01431          retlw .80 
+0694   3455           01432          retlw .85 
+0695   3459           01433          retlw .89 
+0696   345D           01434          retlw .93 
+0697   3461           01435          retlw .97 
+0698   3465           01436          retlw .101 
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 34
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0699   3469           01437          retlw .105 
+069A   346D           01438          retlw .109 
+069B   3471           01439          retlw .113 
+069C   3475           01440          retlw .117 
+069D   3479           01441          retlw .121 
+069E   347D           01442          retlw .125 
+069F   3481           01443          retlw .129 
+06A0   3485           01444          retlw .133 
+06A1   3489           01445          retlw .137 
+06A2   348D           01446          retlw .141 
+06A3   3491           01447          retlw .145 
+06A4   3495           01448          retlw .149 
+06A5   3499           01449          retlw .153 
+06A6   349D           01450          retlw .157 
+06A7   34A1           01451          retlw .161 
+06A8   34A5           01452          retlw .165 
+06A9   34AA           01453          retlw .170 
+06AA   34AE           01454          retlw .174 
+06AB   34B2           01455          retlw .178 
+06AC   34B6           01456          retlw .182 
+06AD   34BA           01457          retlw .186 
+06AE   34BE           01458          retlw .190 
+06AF   34C2           01459          retlw .194 
+06B0   34C6           01460          retlw .198 
+06B1   34CA           01461          retlw .202 
+06B2   34CE           01462          retlw .206 
+06B3   34D2           01463          retlw .210 
+06B4   34D6           01464          retlw .214 
+06B5   34DA           01465          retlw .218 
+06B6   34DE           01466          retlw .222 
+06B7   34E2           01467          retlw .226 
+06B8   34E6           01468          retlw .230 
+06B9   34EA           01469          retlw .234 
+06BA   34EE           01470          retlw .238 
+06BB   34F2           01471          retlw .242 
+06BC   34F6           01472          retlw .246 
+06BD   34FA           01473          retlw .250 
+06BE   34FF           01474          retlw .255 
+06BF   34FB           01475          retlw .251 
+06C0   34F7           01476          retlw .247 
+06C1   34F3           01477          retlw .243 
+06C2   34EF           01478          retlw .239 
+06C3   34EB           01479          retlw .235 
+06C4   34E7           01480          retlw .231 
+06C5   34E3           01481          retlw .227 
+06C6   34DF           01482          retlw .223 
+06C7   34DB           01483          retlw .219 
+06C8   34D7           01484          retlw .215 
+06C9   34D3           01485          retlw .211 
+06CA   34CF           01486          retlw .207 
+06CB   34CB           01487          retlw .203 
+06CC   34C7           01488          retlw .199 
+06CD   34C3           01489          retlw .195 
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 35
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+06CE   34BF           01490          retlw .191 
+06CF   34BB           01491          retlw .187 
+06D0   34B7           01492          retlw .183 
+06D1   34B3           01493          retlw .179 
+06D2   34AF           01494          retlw .175 
+06D3   34AA           01495          retlw .170 
+06D4   34A6           01496          retlw .166 
+06D5   34A2           01497          retlw .162 
+06D6   349E           01498          retlw .158 
+06D7   349A           01499          retlw .154 
+06D8   3496           01500          retlw .150 
+06D9   3492           01501          retlw .146 
+06DA   348E           01502          retlw .142 
+06DB   348A           01503          retlw .138 
+06DC   3486           01504          retlw .134 
+06DD   3482           01505          retlw .130 
+06DE   347E           01506          retlw .126 
+06DF   347A           01507          retlw .122 
+06E0   3476           01508          retlw .118 
+06E1   3472           01509          retlw .114 
+06E2   346E           01510          retlw .110 
+06E3   346A           01511          retlw .106 
+06E4   3466           01512          retlw .102 
+06E5   3462           01513          retlw .98 
+06E6   345E           01514          retlw .94 
+06E7   345A           01515          retlw .90 
+06E8   3455           01516          retlw .85 
+06E9   3451           01517          retlw .81 
+06EA   344D           01518          retlw .77 
+06EB   3449           01519          retlw .73 
+06EC   3445           01520          retlw .69 
+06ED   3441           01521          retlw .65 
+06EE   343D           01522          retlw .61 
+06EF   3439           01523          retlw .57 
+06F0   3435           01524          retlw .53 
+06F1   3431           01525          retlw .49 
+06F2   342D           01526          retlw .45 
+06F3   3429           01527          retlw .41 
+06F4   3425           01528          retlw .37 
+06F5   3421           01529          retlw .33 
+06F6   341D           01530          retlw .29 
+06F7   3419           01531          retlw .25 
+06F8   3415           01532          retlw .21 
+06F9   3411           01533          retlw .17 
+06FA   340D           01534          retlw .13 
+06FB   3409           01535          retlw .9 
+06FC   3405           01536          retlw .5 
+                      01537 
+                      01538 
+                      01539 
+Warning[205]: Found directive in column 1. (org)
+0500                  01540 org 0x500
+0500                  01541 square
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 36
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0500   0782           01542          addwf PCL,1    
+0501   3400 34FF 3400 01543          dt 0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x
+                            00,0xFF
+       34FF 3400 34FF 
+       3400 34FF 3400 
+       34FF 3400 34FF 
+       3400 34FF 3400 
+       34FF 3400 34FF 
+       3400 34FF 
+                      01544                 
+                      01545 
+                      01546 
+Warning[205]: Found directive in column 1. (end)
+                      01547 end
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 37
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ADDEN                             00000003
+ADEN                              00000003
+BRGH                              00000002
+C                                 00000000
+C1INV                             00000004
+C1OUT                             00000006
+C2INV                             00000005
+C2OUT                             00000007
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCPR1                             00000015
+CCPR1H                            00000016
+CCPR1L                            00000015
+CIS                               00000003
+CM0                               00000000
+CM1                               00000001
+CM2                               00000002
+CMCON                             0000001F
+CMIE                              00000006
+CMIF                              00000006
+CREN                              00000004
+CSRC                              00000007
+DATA_CP_OFF                       00003FFF
+DATA_CP_ON                        00003EFF
+DC                                00000001
+EEADR                             0000009B
+EECON1                            0000009C
+EECON2                            0000009D
+EEDATA                            0000009A
+EEIE                              00000007
+EEIF                              00000007
+F                                 00000001
+FERR                              00000002
+FSR                               00000004
+GIE                               00000007
+INDF                              00000000
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IRP                               00000007
+NOT_BO                            00000000
+NOT_BOD                           00000000
+NOT_BOR                           00000000
+NOT_PD                            00000003
+NOT_POR                           00000001
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 38
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+NOT_RBPU                          00000007
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+OERR                              00000001
+OPTION_REG                        00000081
+OSCF                              00000003
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PEIE                              00000006
+PIE1                              0000008C
+PIR1                              0000000C
+PORTA                             00000005
+PORTB                             00000006
+PR2                               00000092
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RA6                               00000006
+RA7                               00000007
+RB0                               00000000
+RB1                               00000001
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
+RB5                               00000005
+RB6                               00000006
+RB7                               00000007
+RBIE                              00000003
+RBIF                              00000000
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RP0                               00000005
+RP1                               00000006
+RX9                               00000006
+RX9D                              00000000
+SPBRG                             00000099
+SPEN                              00000007
+SREN                              00000005
+STATUS                            00000003
+SYNC                              00000004
+T0CS                              00000005
+T0IE                              00000005
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 39
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+T0IF                              00000002
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1OSCEN                           00000003
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TMR0                              00000001
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR1                              0000000E
+TMR1CS                            00000001
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000085
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+TRISA6                            00000006
+TRISA7                            00000007
+TRISB                             00000086
+TRISB0                            00000000
+TRISB1                            00000001
+TRISB2                            00000002
+TRISB3                            00000003
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRMT                              00000001
+TX9                               00000006
+TX9D                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 40
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+VR0                               00000000
+VR1                               00000001
+VR2                               00000002
+VR3                               00000003
+VRCON                             0000009F
+VREN                              00000007
+VROE                              00000006
+VRR                               00000005
+W                                 00000000
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+Z                                 00000002
+_BODEN_OFF                        00003FBF
+_BODEN_ON                         00003FFF
+_BOREN_OFF                        00003FBF
+_BOREN_ON                         00003FFF
+_CONFIG                           00002007
+_CPD_OFF                          00003FFF
+_CPD_ON                           00003EFF
+_CP_OFF                           00003FFF
+_CP_ON                            00001FFF
+_DEVID1                           00002006
+_ER_OSC_CLKOUT                    00003FFF
+_ER_OSC_NOCLKOUT                  00003FFE
+_EXTCLK_OSC                       00003FEF
+_FOSC_ECIO                        00003FEF
+_FOSC_EXTRCCLK                    00003FFF
+_FOSC_EXTRCIO                     00003FFE
+_FOSC_HS                          00003FEE
+_FOSC_INTOSCCLK                   00003FFD
+_FOSC_INTOSCIO                    00003FFC
+_FOSC_LP                          00003FEC
+_FOSC_XT                          00003FED
+_HS_OSC                           00003FEE
+_IDLOC0                           00002000
+_IDLOC1                           00002001
+_IDLOC2                           00002002
+_IDLOC3                           00002003
+_INTOSC_OSC_CLKOUT                00003FFD
+_INTOSC_OSC_NOCLKOUT              00003FFC
+_INTRC_OSC_CLKOUT                 00003FFD
+_INTRC_OSC_NOCLKOUT               00003FFC
+_LP_OSC                           00003FEC
+_LVP_OFF                          00003F7F
+_LVP_ON                           00003FFF
+_MCLRE_OFF                        00003FDF
+_MCLRE_ON                         00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FF7
+_RC_OSC_CLKOUT                    00003FFF
+_RC_OSC_NOCLKOUT                  00003FFE
+_WDTE_OFF                         00003FFB
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 41
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_WDTE_ON                          00003FFF
+_WDT_OFF                          00003FFB
+_WDT_ON                           00003FFF
+_XT_OSC                           00003FED
+__16F628A                         00000001
+change_mode                       0000009F
+chkm1                             0000008E
+chkm2                             00000090
+count1                            00000020
+count2                            00000021
+count3                            00000022
+count4                            00000025
+count5                            00000026
+count6                            00000028
+count7                            00000029
+count_pos                         00000027
+count_si                          00000036
+count_sq                          00000035
+dec                               00000136
+dec1                              000001B0
+delay                             00000227
+delay2                            000001C2
+delay2x                           000001C7
+delay3                            000001D9
+delay_0                           00000030
+delay_1                           00000031
+delay_1ms                         0000022C
+delay_1ms_0                       00000230
+delay_2                           00000032
+delay_w                           00000228
+delaysq                           000001D0
+delaysq_0                         000001D4
+disp_sqr                          0000016C
+done_sqr                          000001A8
+inc                               00000105
+inc1                              00000167
+lcd_4                             PORTB, 0
+lcd_5                             PORTB, 1
+lcd_6                             PORTB, 2
+lcd_7                             PORTB, 3
+lcd_addr                          000001FC
+lcd_clock                         0000021E
+lcd_data                          00000202
+lcd_e                             PORTA, 0
+lcd_init                          000001E0
+lcd_rs                            PORTB, 4
+lcd_temp                          00000033
+loop                              00000083
+loop0                             000001C4
+loop0x                            000001CB
+loop11x                           000001CB
+loop3                             000001DB
+mode                              00000024
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 42
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+no_sqr                            0000018A
+poll                              0000008A
+set_0                             000000C8
+set_1                             000000A6
+set_2                             000000B7
+set_ok                            000000D9
+short_dly                         00000237
+short_dly_0                       00000239
+sin_delay                         0000048A
+sin_high                          000004A8
+sin_low                           000004E2
+sin_mid                           000004C6
+sine                              00000700
+sine_run                          000000E1
+sq_s                              000001D2
+sqr_delay                         00000430
+sqr_high                          0000044E
+sqr_low                           0000046C
+square                            00000500
+square_run                        000000F9
+trangle                           00000600
+trangle_run                       000000ED
+value                             00000023
+volt                              000000A0
+volt1                             00000034
+volt_h                            00000400
+volt_l                            00000414
+volt_max                          0000010E
+volt_min                          0000013F
+write_eeprom                      000001B7
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0080 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+00C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0100 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0140 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0180 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+01C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0200 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXX----
+0400 : XXXXXXXXXXXXXXXX X---XXXXXXXXXXXX XXXXX----------- XXXXXXXXXXXXXXXX
+0440 : XXXXXXXX------XX XXXXXXXXXXXXXXXX XXXXXX------XXXX XXXXXXXXXXXXXXXX
+0480 : XXXX------XXXXXX XXXXXXXXXXXXXXXX XX------XXXXXXXX XXXXXXXXXXXXXXXX
+MPASM  5.51                       SIG_GEN.ASM   12-10-2024  11:18:29         PAGE 43
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+
+04C0 : ------XXXXXXXXXX XXXXXXXXXXXXXX-- --XXXXXXXXXXXXXX XXXXXXXXXX------
+0500 : XXXXXXXXXXXXXXXX XXXXX----------- ---------------- ----------------
+0600 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0640 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0680 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+06C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXX---
+0700 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0740 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0780 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+07C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXX---
+2000 : -------X-------- ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:  1301
+Program Memory Words Free:   747
+
+
+Errors   :     0
+Warnings :   179 reported,     0 suppressed
+Messages :    67 reported,     0 suppressed
+
+
